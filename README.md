@@ -80,24 +80,28 @@ project_root/
 |
 |-- app.py                  # Main Flask application
 |-- requirements.txt        # Dependencies
-|-- README.md               # Project documentation (this file)
+|-- README.md               # Project documentation
+|
+|-- config.py               # MongoDB configuration
 |
 |-- modules/                # Application modules
+|   |-- auth.py             # Authentication logic (registration & login using JWT + MongoDB)
 |   |-- mail_sender.py      # Mail sending logic
-|   |-- file_uploader.py    # File upload logic
 |   |-- scheduler.py        # Meeting scheduling logic
 |
-|-- static/                 # Static files (if needed)
+|-- static/                 # Static files (e.g., attachments, uploads)
 |
 |-- templates/              # HTML templates (if needed)
 |
 |-- utils/                  # Utility functions
 |   |-- hashing.py          # Hashing utility
-|   |-- queue_handler.py    # Queue management logic
+|   |-- jwt_handler.py      # JWT handling utility
+|   |-- queue_handler.py    # Queue management logic (background tasks)
 |
 |-- tests/                  # Test cases
-    |-- test_mail_sender.py # Tests for MailSender
-    |-- test_scheduler.py   # Tests for Scheduler
+|   |-- test_auth.py        # Tests for authentication
+|   |-- test_mail_sender.py # Tests for MailSender module
+|   |-- test_scheduler.py   # Tests for Scheduler module
 ```
 
 ---

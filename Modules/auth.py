@@ -1,36 +1,48 @@
 from flask import Blueprint, request, jsonify
-from utils.hashing import hash_password, verify_password
-from utils.jwt_handler import encode_jwt
+from flask_jwt_extended import create_access_token
+from werkzeug.security import generate_password_hash, check_password_hash
+from pymongo import MongoClient
+from config import MONGO_URI
+
+client = MongoClient(MONGO_URI)
+db = client["gmail_clone"]
+users_collection = db["users"]
+
 auth_blueprint = Blueprint('auth', __name__)
 
-def get_user_by_email(db, email):
-    return db.users.find_one({"email": email})
 
 @auth_blueprint.route('/register', methods=['POST'])
 def register():
-    db = request.app.config['db']
+    """
+    Handle user registration.
+    """
     data = request.json
-    email = data.get('email')
-    password = data.get('password')
+    email = data.get("email")
+    password = data.get("password")
 
-    if get_user_by_email(db, email):
-        return jsonify({"message": "User already exists."}), 400
+    if not email or not password:
+        return jsonify({"message": "Email and password are required"}), 400
+    
+    if users_collection.find_one({"email": email}):
+        return jsonify({"error": "User already exists"}), 400
 
-    hashed_password = hash_password(password)
-    db.users.insert_one({"email": email, "password": hashed_password})
-
-    return jsonify({"message": "User registered successfully."}), 201
+    hashed_password = generate_password_hash(password)
+    users_collection.insert_one({"email": email, "password": hashed_password})
+    return jsonify({"message": "User registered successfully"}), 201
 
 @auth_blueprint.route('/login', methods=['POST'])
 def login():
-    db = request.app.config['db']
+    """
+    Handle user login and return a JWT token.
+    """
     data = request.json
-    email = data.get('email')
-    password = data.get('password')
+    email = data.get("email")
+    password = data.get("password")
 
-    user = get_user_by_email(db, email)
-    if not user or not verify_password(password, user['password']):
-        return jsonify({"message": "Invalid credentials."}), 401
+    user = users_collection.find_one({"email": email})
+    if not user or not check_password_hash(user['password'], password):
+        return jsonify({"message": "Invalid email or password"}), 401
 
-    token = encode_jwt({"email": email})
+    # token = jwt.encode({"email": user['email'], "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)}, SECRET_KEY)
+    token = create_access_token(identity=email)
     return jsonify({"token": token}), 200

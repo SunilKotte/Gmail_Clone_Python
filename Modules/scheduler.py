@@ -1,16 +1,19 @@
 from flask import Blueprint, request, jsonify
+from datetime import datetime
+
 scheduler_blueprint = Blueprint('scheduler', __name__)
 
-@scheduler_blueprint.route('/create', methods=['POST'])
-def create_meeting():
-    db = request.app.config['db']
+@scheduler_blueprint.route('/schedule', methods=['POST'])
+def schedule_meeting():
+    """
+    Schedule a meeting with the provided details.
+    """
     data = request.json
-    meeting_data = {
-        'title': data.get('title'),
-        'host': data.get('host'),
-        'date': data.get('date'),
-        'time': data.get('time'),
-        'attendees': data.get('attendees', [])
-    }
-    db.meetings.insert_one(meeting_data)
-    return jsonify({"message": "Meeting scheduled successfully."}), 200
+    meeting_date = data.get('date')
+    description = data.get('description', 'No description provided')
+
+    try:
+        datetime.strptime(meeting_date, '%Y-%m-%d %H:%M:%S')
+        return jsonify({"message": "Meeting scheduled successfully", "date": meeting_date, "description": description}), 200
+    except ValueError:
+        return jsonify({"message": "Invalid date format. Use YYYY-MM-DD HH:MM:SS"}), 400

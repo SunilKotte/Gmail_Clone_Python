@@ -1,0 +1,42 @@
+name: Run Tests on Branch Creation and Push
+on:
+  push:
+    branches:
+      - '*'  # Trigger on any branch push
+    # Exclude the main branch if you don't want to run tests there
+    branches-ignore:
+      - main  # Ignore push events on the main branch
+
+  create:
+    ref_type: branch  # Trigger on branch creation
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # Define the environment (Ubuntu in this case)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2  # Checkout the repository
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'  # Set the Python version
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # Install dependencies from requirements file
+
+      - name: Run tests
+        run: |
+          pytest  # Run the tests using pytest
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}  # Use secrets to store sensitive data, if needed
+
+      - name: Upload test results
+        if: always()  # Upload test results even if the tests fail
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-results
+          path: test-results/
